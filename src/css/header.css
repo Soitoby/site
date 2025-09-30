@@ -1,0 +1,25 @@
+header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: #36454f;
+    border-bottom: 1px solid #36454f;
+    margin: 10px 50px 0px 50px;
+    padding-bottom: 15px;
+}
+
+.navigate_menu {
+    display: flex;
+}
+
+.navigate_menu a {
+    text-decoration: none;
+    margin: 30px;
+    color: #36454f;
+    font-size: 28px;
+}
+
+.navigate_menu a:hover {
+    color: #B58541;
+    text-decoration: double;
+}
