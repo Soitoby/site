@@ -1,0 +1,4 @@
+.qoute img{
+    background-image: url("/src/img/main_page/quote.svg") ;
+    filter: blur(50px);
+}
