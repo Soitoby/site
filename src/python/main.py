@@ -1,117 +1,119 @@
-import fastapi
+# src/python/main.py
 import os
 from pathlib import Path
 
-# Создаем директорию если не существует
-Path("src/html").mkdir(parents=True, exist_ok=True)
+# Определяем пути относительно расположения скрипта
+BASE_DIR = Path(__file__).parent.parent
+TEMPLATES_DIR = BASE_DIR / "templates"
+HTML_OUTPUT_DIR = BASE_DIR / "html"
+CSS_DIR = BASE_DIR / "css"
+IMG_DIR = BASE_DIR / "img"
 
-HEADER = "src/templates/header.html" 
-FOOTER = "src/templates/footer.html"
-ABOUT = "src/templates/about.html"
-CONTACT = "src/templates/contact.html"
-MAIN = "src/templates/main.html"
-MENU = "src/templates/menu.html"
-INDEX = "src/templates/main.html"
-
-def read_template(path_template: str):
+def read_template(template_path):
+    """Читает содержимое шаблона из файла"""
     try:
-        with open(path_template, "r", encoding='utf-8') as f:
+        with open(template_path, 'r', encoding='utf-8') as f:
             return f.read()
-    except Exception as e:
-        print(f"Error reading template {path_template}: {e}")
+    except FileNotFoundError:
+        print(f"Ошибка: файл {template_path} не найден")
         return ""
-     
-def create_page(template_path: str, output_name: str):
-    header = read_template(HEADER)
-    content = read_template(template_path)
-    footer = read_template(FOOTER)
-    if content == "":
+    except Exception as e:
+        print(f"Ошибка при чтении файла {template_path}: {e}")
+        return ""
+
+def build_page(template_name, output_name=None):
+    """Собирает страницу из шаблонов"""
+    if output_name is None:
+        output_name = template_name
+    
+    # Пути к файлам
+    header_path = TEMPLATES_DIR / "header.html"
+    footer_path = TEMPLATES_DIR / "footer.html"
+    content_path = TEMPLATES_DIR / template_name
+    output_path = HTML_OUTPUT_DIR / output_name
+    
+    # Проверяем существование необходимых файлов
+    if not header_path.exists():
+        print(f"Ошибка: файл header.html не найден в {TEMPLATES_DIR}")
         return False
+    
+    if not footer_path.exists():
+        print(f"Ошибка: файл footer.html не найден в {TEMPLATES_DIR}")
+        return False
+    
+    if not content_path.exists():
+        print(f"Ошибка: файл {template_name} не найден в {TEMPLATES_DIR}")
+        return False
+    
+    # Читаем шаблоны
+    header = read_template(header_path)
+    content = read_template(content_path)
+    footer = read_template(footer_path)
+    
+    if not header or not content or not footer:
+        print("Ошибка: один из шаблонов пуст или не может быть прочитан")
+        return False
+    
+    # Объединяем шаблоны
+    full_page = header + content + footer
+    
+    # Сохраняем результат
     try:
-        with open(f"src/html/{output_name}", "w", encoding="utf-8") as f:
-            f.write(header + content + footer)
+        with open(output_path, 'w', encoding='utf-8') as f:
+            f.write(full_page)
+        print(f"Страница {output_name} успешно собрана и сохранена в {output_path}")
         return True
     except Exception as e:
-        print(f"Error creating page {output_name}: {e}")
+        print(f"Ошибка при сохранении страницы {output_name}: {e}")
         return False
 
-app = fastapi.FastAPI()
+def build_all_pages():
+    """Собирает все страницы из шаблонов"""
+    # Создаем выходную директорию, если она не существует
+    HTML_OUTPUT_DIR.mkdir(exist_ok=True)
+    
+    # Получаем список всех HTML-файлов в папке templates, кроме header и footer
+    template_files = [f for f in os.listdir(TEMPLATES_DIR) 
+                     if f.endswith('.html') and f not in ['header.html', 'footer.html']]
+    
+    if not template_files:
+        print(f"В папке {TEMPLATES_DIR} не найдено HTML-файлов для сборки")
+        return
+    
+    print(f"Найдено {len(template_files)} файлов для сборки: {', '.join(template_files)}")
+    
+    # Собираем каждую страницу
+    success_count = 0
+    for template_file in template_files:
+        if build_page(template_file):
+            success_count += 1
+    
+    print(f"Успешно собрано {success_count} из {len(template_files)} страниц")
 
-@app.get("/")
-async def root():
-    page = "index.html"
-    file_path = f"src/html/{page}"
+def check_directories():
+    """Проверяет существование необходимых директорий"""
+    directories = [TEMPLATES_DIR, CSS_DIR, IMG_DIR]
+    missing_dirs = []
     
-    if not os.path.isfile(file_path):
-        if os.path.isfile(INDEX):
-            if create_page(INDEX, page):
-                return fastapi.responses.FileResponse(file_path)
-            else:
-                return fastapi.responses.HTMLResponse("Error creating page", status_code=500)
-        else:
-            return fastapi.responses.HTMLResponse("Index template not found", status_code=404)
-    return fastapi.responses.FileResponse(file_path)
+    for directory in directories:
+        if not directory.exists():
+            missing_dirs.append(directory.name)
+            print(f"Предупреждение: директория {directory} не найдена")
+    
+    if missing_dirs:
+        print(f"Отсутствуют следующие директории: {', '.join(missing_dirs)}")
+        print("Создайте их для правильной работы проекта")
+    
+    return len(missing_dirs) == 0
 
-@app.get("/main")
-async def main_page():
-    page = "main.html"
-    file_path = f"src/html/{page}"
+if __name__ == "__main__":
+    print("Начинаем сборку страниц из шаблонов...")
     
-    if not os.path.isfile(file_path):
-        if os.path.isfile(MAIN):
-            if create_page(MAIN, page):
-                return fastapi.responses.FileResponse(file_path)
-            else:
-                return fastapi.responses.HTMLResponse("Error creating page", status_code=500)
-        else:
-            return fastapi.responses.HTMLResponse("Template not found", status_code=404)
+    # Проверяем директории
+    if not check_directories():
+        print("Продолжаем сборку, но некоторые ресурсы могут быть недоступны")
     
-    return fastapi.responses.FileResponse(file_path)
-
-@app.get("/menu")
-async def menu_page():
-    page = "menu.html"
-    file_path = f"src/html/{page}"
+    # Собираем все страницы
+    build_all_pages()
     
-    if not os.path.isfile(file_path):
-        if os.path.isfile(MENU):
-            if create_page(MENU, page):
-                return fastapi.responses.FileResponse(file_path)
-            else:
-                return fastapi.responses.HTMLResponse("Error creating page", status_code=500)
-        else:
-            return fastapi.responses.HTMLResponse("Template not found", status_code=404)
-    
-    return fastapi.responses.FileResponse(file_path)
-
-@app.get("/contact")
-async def contact_page():
-    page = "contact.html"
-    file_path = f"src/html/{page}"
-    
-    if not os.path.isfile(file_path):
-        if os.path.isfile(CONTACT):
-            if create_page(CONTACT, page):
-                return fastapi.responses.FileResponse(file_path)
-            else:
-                return fastapi.responses.HTMLResponse("Error creating page", status_code=500)
-        else:
-            return fastapi.responses.HTMLResponse("Template not found", status_code=404)
-    
-    return fastapi.responses.FileResponse(file_path)
-
-@app.get("/about")
-async def about_page():
-    page = "about.html"
-    file_path = f"src/html/{page}"
-    
-    if not os.path.isfile(file_path):
-        if os.path.isfile(ABOUT):
-            if create_page(ABOUT, page):
-                return fastapi.responses.FileResponse(file_path)
-            else:
-                return fastapi.responses.HTMLResponse("Error creating page", status_code=500)
-        else:
-            return fastapi.responses.HTMLResponse("Template not found", status_code=404)
-    
-    return fastapi.responses.FileResponse(file_path)
+    print("Сборка завершена!")
