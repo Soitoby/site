@@ -4,7 +4,7 @@ import main
 import menu_create
 import uvicorn
 
-# Генерируем страницы при запуске
+
 main.start_create_page()
 menu_create.start_manu_create()
 
@@ -41,11 +41,11 @@ async def contact():
 async def menu():
     return fastapi.responses.HTMLResponse(read_html("src/html/menu.html"))
 
-# Дополнительно: эндпоинт для обслуживания статических файлов (CSS, JS, изображения)
+
 from fastapi.staticfiles import StaticFiles
 import os
 
-# Создаем папки если их нет
+
 os.makedirs("static", exist_ok=True)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 

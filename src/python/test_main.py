@@ -1,12 +1,12 @@
-# main.py
+
 import fastapi
 import os
 from pathlib import Path
 
-# Создаем директории если не существуют
+
 Path("src/html").mkdir(parents=True, exist_ok=True)
 
-# Пути к шаблонам
+
 HEADER = "src/templates/header.html" 
 FOOTER = "src/templates/footer.html"
 

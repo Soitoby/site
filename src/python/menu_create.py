@@ -1,15 +1,15 @@
 import os
 
 def generate_menu_html():
-    # Путь к папке с меню
+    
     menu_path = "src/img/menu"
     
-    # Проверяем существование папки
+
     if not os.path.exists(menu_path):
         print(f"Ошибка: Папка {menu_path} не существует!")
         return
     
-    # Получаем список всех папок в директории меню
+
     try:
         folders = [f for f in os.listdir(menu_path) 
                   if os.path.isdir(os.path.join(menu_path, f))]
@@ -17,10 +17,10 @@ def generate_menu_html():
         print(f"Ошибка при чтении папки: {e}")
         return
     
-    # Сортируем папки по имени
+
     folders.sort()
     
-    # Генерируем HTML-структуру
+
     html_content = """<!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -115,16 +115,16 @@ def generate_menu_html():
         <h1>Меню</h1>
 """
     
-    # Обрабатываем каждую папку как категорию меню
+
     for folder in folders:
         category_path = os.path.join(menu_path, folder)
         
-        # Получаем все файлы в папке категории
+
         try:
             items = [f for f in os.listdir(category_path) 
                     if os.path.isfile(os.path.join(category_path, f))]
             
-            # Фильтруем только изображения (можно расширить список форматов)
+
             image_extensions = {'.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'}
             items = [item for item in items 
                     if os.path.splitext(item)[1].lower() in image_extensions]
@@ -133,14 +133,14 @@ def generate_menu_html():
             print(f"Ошибка при чтении папки {folder}: {e}")
             items = []
         
-        # Добавляем категорию в HTML
+
         html_content += f"""
         <div class="category">
             <div class="category-header">{folder}</div>
             <div class="items-container">
         """
         
-        # Добавляем позиции меню (файлы) в категорию
+
         if items:
             for item in sorted(items):
                 item_name = os.path.splitext(item)[0]  # Убираем расширение файла
@@ -180,7 +180,7 @@ def generate_menu_html():
 </body>
 </html>"""
     
-    # Сохраняем HTML-файл
+
     try:
         with open('src/templates/menu.html', 'w', encoding='utf-8') as f:
             f.write(html_content)
