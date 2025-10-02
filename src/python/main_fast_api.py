@@ -2,6 +2,7 @@ import fastapi
 import fastapi.staticfiles
 import main
 import menu_create
+import uvicorn
 
 # Генерируем страницы при запуске
 main.start_create_page()
@@ -22,6 +23,10 @@ def read_html(path: str):
 
 @app.get("/")
 async def root():
+    return fastapi.responses.HTMLResponse(read_html("src/html/index.html"))
+
+@app.get("/index")
+async def index():
     return fastapi.responses.HTMLResponse(read_html("src/html/index.html"))
 
 @app.get("/about")
@@ -45,5 +50,5 @@ os.makedirs("static", exist_ok=True)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 if __name__ == "__main__":
-    import uvicorn
+    
     uvicorn.run(app, host="0.0.0.0", port=8000)
