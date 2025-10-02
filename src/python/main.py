@@ -106,7 +106,7 @@ def check_directories():
     
     return len(missing_dirs) == 0
 
-if __name__ == "__main__":
+def start_create_page():
     print("Начинаем сборку страниц из шаблонов...")
     
     # Проверяем директории
